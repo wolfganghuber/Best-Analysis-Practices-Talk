@@ -1,0 +1,34 @@
+@import url('https://fonts.googleapis.com/css2?family=Lexend&display=swap');
+
+/*-- scss:defaults --*/
+$font-family-sans-serif: 'Lexend';
+$presentation-font-size-root: 1.6em;
+$presentation-line-height: 1.5;
+$margin-left: auto;
+$margin-right: auto;
+$link-color: #007E8C;
+$code-color: #005A5A;
+$selection-bg: #005A5A !default;
+
+
+$presentation-heading-color: #E84614;
+$presentation-h1-font-size: 2em;
+$presentation-h2-font-size: 1.6em;
+
+
+/*-- scss:rules --*/
+
+/*-- manually placing GHGA logo --*/
+.reveal .slide-logo {
+  display: block;
+  position: fixed;
+  bottom: 5px;
+  right: 12px;
+  top: unset !important;
+  left: unset !important;
+  height: 100px !important;
+  width: 100x !important;
+  max-width: unset !important;
+  max-height: unset !important;
+}
+
