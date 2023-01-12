@@ -1,7 +1,7 @@
 ---
 title: 'Good scientific practice: <a href="https://www.huber.embl.de/msmb/Chap-Design.html">Design of High Throughput Experiments and their Analysis</a>'
 author: Susan Holmes, Wolfgang Huber
-date: 2022-06-24
+date: 2023-01-17
 format:
   revealjs: 
     theme: [default, GHGA.scss]
@@ -22,25 +22,25 @@ editor_options:
 # Design of High Throughput Experiments 
 ```{r initialize, echo = FALSE, warning = FALSE}
 ## Set default options for code chunks
-knitr::opts_chunk$set(tidy = FALSE, cache = TRUE, autodep = TRUE,
-     dev = "png", dpi = 300,
-     size = "small",
-     message = FALSE, error = FALSE, warning = TRUE)
+knitr::opts_chunk$set(
+  cache = TRUE, autodep = TRUE,
+  echo = FALSE, message = FALSE, error = FALSE, warning = TRUE)
 
-input_dir = function(x)
-  path.expand(file.path("/Users/whuber/svnco/CUBook", x))
-
-## output width
-base::options(width = 70,  continue = " ")
-
-## set seed - to have reproducibility
 set.seed(0xbedada)
 ```
 
-RA Fisher                  |  Pioneer of Experimental Design
-:-------------------------:|:------------------------------------------:
-![](fig/RAFisherSmoking.png){width="50%"}|  *To consult the statistician after an experiment is finished is often merely to ask him to conduct a post mortem examination. He can perhaps say what the experiment died of.*
-[@fisher1935design]        |  (Presidential Address to the First Indian Statistical Congress, 1938. Sankhya 4, 14-17).  
+::: {#fig-fisher layout-ncol=2}
+
+![](fig/Youngronaldfisher2.JPG){width="40%" fig-align="center"}
+
+<font size=+2>
+*To consult the statistician after an experiment is finished is often merely to ask him to conduct a post mortem examination. He can perhaps say what the experiment died of.*<br>
+Presidential Address to the First Indian Statistical Congress, 1938. Sankhya 4, 14-17.  
+</font>
+
+R.A. Fisher, Pioneer of Statistics and Experimental Design
+
+:::
 
 # Goals for this Lecture
 
@@ -334,13 +334,6 @@ the data and enable you to adjust the protocol.
 It is important to be aware of sources of variation as
 they occur and adjust for them.
 
-<!--
-# Phylochip example
-
-<div style="text-align: center;"> 
-![](`r input_dir("images/ThreeSets28s.png")`){width="50%"}
-</div>
--->
 
 # RNAi screen example
 
