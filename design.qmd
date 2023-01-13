@@ -240,28 +240,30 @@ Even when absolute values exist (e.g., read counts in an RNA-Seq experiment) the
 
 # Normalization
 
-Sometimes we do not know all relevant parameters in an experiment but can 
+Dealing with the lack of units in many biological assays
 
-- try to estimate from the data, or 
-- only consider endpoints where the nuisance parameter cancels out  
-
-Examples
+- try to make measurements comparable to each other using some 'arbitrary' but at least consistent units
+- only consider endpoints where the units cancel out  (e.g., fold change)
 
 ::: {.fragment}
--  We modeled the sampling noise in RNA-seq and 16S rRNA with a Gamma-Poisson distribution.
--  We estimated sequencing depth bias with the library size factors.
--  We modeled sampling biases caused by the two different RNA-Seq protocols in the pasilla data
-   (single-, paired-end) by introducing a blocking factor into our (generalized) linear model.
+Examples
+
+-  Sequence counts 
+-  Mass spec intensities
+-  Fluorescence intensities (e.g. CODEX)
+
+:::
+
+::: {.fragment}
+Btw, terrible name. It has nothing to do with normal distribution, vector norm, or right angles. 
+Perhaps better would be "calibration".
 ::: 
 
 # What is a good normalization method?
 
 ```{r}
-#| label: norm
-#| results: false
-#| warning: false
-#| message: false
-#| output-location: fragment
+#| label: norm1
+#| results: "hide"
 
 library("DESeq2")
 library("airway")
@@ -286,14 +288,21 @@ myScatterplot = function(x) {
     geom_abline(slope = 1, intercept = 0, col = "orange") + 
     theme(legend.position = "none")
 }
-
+```
+```{r}
+#| label: norm2
+#| fig-width: 8
+#| fig-height: 4
+#| fig-align: "center"
+#| out-width: 100%
 grid.arrange(
   myScatterplot(counts(aw)),
   myScatterplot(counts(aw, normalized = TRUE)),
   ncol = 2)
 ```
 
-```{r runDESeq}
+```{r}
+#| label: runDESeq
 #| eval: false
 #| echo: false
 #| warning: false
