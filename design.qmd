@@ -215,7 +215,7 @@ ignorance, not an objective property of the world.
 ![William of Ockham](fig/William_of_Ockham.png)
 :::
 
-:::{.column width="60%}
+:::{.column width="60%"}
 
 If one can explain a phenomenon without assuming this or that hypothetical entity, there is no ground for assuming it.
 
@@ -261,56 +261,13 @@ Perhaps better would be "calibration".
 
 # What is a good normalization method?
 
-```{r}
-#| label: norm1
-#| results: "hide"
+:::{.columns}
 
-library("DESeq2")
-library("airway")
-library("ggplot2")
-library("dplyr")
-library("gridExtra")
-library("hexbin")
-data("airway")
-aw = DESeqDataSet(airway, design = ~ cell + dex) %>%
-  estimateSizeFactors
-sizeFactors(aw)
+:::{.column width="80%"}
+![](fig/normalization.png){fig-align="center"}
+:::
 
-samples = c("SRR1039513", "SRR1039517") 
-
-myScatterplot = function(x) {
-  as_tibble(x) %>% 
-  mutate(rs = rowSums(x)) %>%
-  filter(rs >= 2) %>%
-  ggplot(aes(x = asinh(SRR1039513), 
-             y = asinh(SRR1039517))) + geom_hex(bins = 50) +
-    coord_fixed() + 
-    geom_abline(slope = 1, intercept = 0, col = "orange") + 
-    theme(legend.position = "none")
-}
-```
-```{r}
-#| label: norm2
-#| fig-width: 8
-#| fig-height: 4
-#| fig-align: "center"
-#| out-width: 100%
-grid.arrange(
-  myScatterplot(counts(aw)),
-  myScatterplot(counts(aw, normalized = TRUE)),
-  ncol = 2)
-```
-
-```{r}
-#| label: runDESeq
-#| eval: false
-#| echo: false
-#| warning: false
-#| message: false
-library("magrittr")
-aw = DESeqDataSet(airway, design = ~ cell + dex) %>% DESeq  
-```
-
+:::
 
 - If the normalization is 'off', we can have increased variability between replicates
 - ... and/or apparent systematic differences between different conditions that are not real
@@ -323,22 +280,21 @@ What do we want from a good normalization method:
 
 Possible figure of merit?
 
-- signal-to-noise ratio
-
+- signal-to-noise ratio, computed from pos. and neg. controls, replicates
 
 
 # Regular and catastrophic noise
 
-Regular noise can be modelled by simple probability models such as
-independent normal distributions, Poissons, or mixtures such as
-Gamma-Poisson or Laplace. 
+Regular noise: can be modeled by simple probability models (independent normal, Poisson distributions; or mixtures such as
+Gamma-Poisson or Laplace) 
 
-We can use relatively
-straightforward methods to take noise into account in our data analyses.
+We can use relatively straightforward methods to take regular noise into account in our data analyses.
 
-The real world is more complicated: measurements can be completely off the scale (a sample swap, a contamination or a software bug), and multiple errors often come together: e.g., a whole microtiter plate went bad, affecting all data measured from it. 
+The real world is more complicated: measurements can be completely off the scale (a sample swap, a contamination or a software bug). 
+Multiple errors often come together: e.g., a whole microtiter plate went bad, affecting all data measured from it. 
 
-Such events are harder to model or even correct for -- our best chance to deal with them is data quality assessment, outlier detection and documented removal.
+Such events are hard to model or even correct for---our best chance is data quality assessment, outlier detection and documented removal.
+
 
 # Keeping track: Dailies
 
@@ -357,147 +313,20 @@ A film director will view daily takes, to correct potential lighting, shooting i
 :::
 
 
-Intermediate data analyses and
-visualizations will track eventual unexpected sources of variation in
+Intermediate data analyses and visualizations will track eventual unexpected sources of variation in
 the data and enable you to adjust the protocol. 
 
-It is important to be aware of sources of variation as
-they occur and adjust for them.
+It is important to be aware of sources of variation as they occur and adjust for them.
 
 
 # RNAi screen example
 
 <div style="text-align: center;"> 
-![](fig/RNAiScreen.png){width="50%"}
+![](fig/RNAiScreen.png){width="55%"}
 </div>
 
-# Basic principles in the design of experiments
 
-- Balancing
-- Avoidance of confounding
-- Blocking
-- Randomization
-- Attention to detail
-
-# Clever combinations and balancing: a motivating example
-
-::: {.columns}
-
-::: {.column width="20%"}
-![](fig/balancechem.png){fig-align="right" width="50%"} 
-:::
-
-::: {.column width="80%"}
-
-A pharmacist's balance weighing analogy (@Hotelling1944 and @Mood1946). 
-:::
-:::
-Experimental design aims to maximize the available resources. One strategy is to capitalize on cancellations and symmetries. An interesting example is a weighing scheme devised by Hotelling.
-
-Consider a set of eight objects of unknown weights $m=(m_1,\ldots,m_8)$.
-
-For our simulation study, we create a vector of true $m$ randomly.
-
-```{r}
-#| label: HotellingsExpt
-library(magrittr)
-m = sample(seq(2, 16, by = 2), 8)  + round(rnorm(8, 1), 1) %T>% print
-```
-
-## Method 1: Naive method, eight weighings
-
-First, let's weigh each $m_i$ individually.
-
-Suppose our scale has errors distributed normally with a SD of 0.1. We simulate the measurements (incl. individual errors) as follows. We also compute the root of the mean of their squares (RMS) as a measure of overall error.
-
-```{r}
-#| label: SimpleWeighing
-X_1to8 = m + rnorm(length(m), mean = 0, sd = 0.1)
-X_1to8
-errors_1to8 = X_1to8 - m
-errors_1to8
-rms = function(x) sqrt(mean(x^2))
-rms(errors_1to8)
-```
-
-## Method 2: Hotelling's method, eight weighings
-
-```{r}
-#| label: HotellingsMethod
-#| message: false
-#| warning: false
-
-library("survey")
-h8 = hadamard(6)
-coef8 = 2 * h8 - 1
-coef8
-```
-
-We use the columns of this matrix to guide our new weighing scheme.
-
-The first column says we should put all 8 pieces on one side of the balance and weigh them, call this `Y[1]`. 
-
-The second column says: place 
-`r paste(which(h8[, 2] > 0), collapse = ", ")` on one side of the balance and 
-`r paste(which(h8[, 2] < 0), collapse = ", ")` on the other and evaluate the difference. Call the result `Y[2]`.
-
-And so on.
-
-Each of the eight weighings has a normal error with sd = 0.1.
-
-```{r}
-Y = m  %*% coef8 + rnorm(length(m), mean = 0, sd = 0.1)
-mhat = Y %*% t(coef8) / 8
-```
-
-Now, because we know the true $m$, we can compute the errors and their sum of squares:
-
-```{r}
-#| label: Hoterrors
-
-errors_hotel = as.vector(mhat) - m
-errors_hotel
-rms(errors_hotel)
-rms(errors_1to8) / rms(errors_hotel)
-```
-
-
-# Proper simulation
-We saw that the second method had RMS about `r round(rms(errors_1to8) / rms(errors_hotel))` times smaller than the first. Were we just lucky?
-
-- Repeat Hotelling's weighing experiment B = 10,000 times with different
-$m$ and look at the sampling distributions of the variances of the
-errors in both schemes
-
-- Guess at the relationship between the RMS results.
-
-```{r bootstrapHotelling, fig.height=7, out.width = "100%"}
-#| label: bootstrapHotelling
-#| output-location: column 
-#| code-overflow: wrap
-
-tcoef8 = t(coef8) / 8
-errs = replicate(10000, {
-  m = sample(seq(2, 16, by = 2), 8) + round(rnorm(8, 1), 1)
-  X_1to8 = m + rnorm(length(m), mean = 0, sd = 0.1)
-  err_1to8 = X_1to8 - m
-  Y = coef8 %*% m + rnorm(length(m), mean = 0, sd = 0.1)
-  mhat = tcoef8 %*% Y
-  err_hotel = mhat - m
-  c(rms(err_1to8), rms(err_hotel))  
-})
-
-library("ggplot2")
-library("tibble")
-ggplot(tibble(ratio = errs[1,] / errs[2,]), 
-       aes(x = log2(ratio))) +
-  geom_histogram(bins =  50)
-```
-
-
-We say that the second scheme is more efficient than the first by a factor of $\sqrt{8}$ because the RMS errors generated by the measurement are $\sqrt{8}$ times lower ($\log_2\sqrt{8}\approx$ `r round(log2(sqrt(8)), 1)`).
-
-# One factor at a time?
+# Vary one factor at a time
 
 ::: {.columns}
 
