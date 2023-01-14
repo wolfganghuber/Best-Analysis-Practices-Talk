@@ -479,123 +479,30 @@ Darwin's *Zea Mays* experiment:
 #| echo: !expr 2
 data(darwin.maize, package= "agridat")
 head(darwin.maize)
+with(darwin.maize, table(type, pair))
 ```
 
-Each pot in Darwin's *Zea Mays* experiment is a block, only the factor of interest should be different (pollination method), all other factors should be kept equal within a block.<br> A balanced design is an experimental design where all the different factor combinations have the same number of observation replicates.  Such data are particularly easy to analyse because the effect of each factor is identifiable.<br> When there are (likely) nuisance factors, it is good to make sure they are balanced with the factors of interest. Sometimes this is inconvenient or impractical for logistic or economic reasons -- but in such cases analysts are on thin ice and need to proceed with caution.|
-:::
+- 15 pairs of plants, each with two different pollination methods, across 4 pots. 
+- a **balanced design**: all the different factor combinations have the same number of observation replicates. 
+- particularly easy to analyse
 
 :::
 
-# Comparing paired versus unpaired design
+:::
 
-When comparing various possible designs, we do power
-simulations. 
-
-Here, we suppose the sample size is 15 in each group and the <span>effect
-size</span> is 0.2. We also need to make assumptions about the standard
-deviations of the measurements, here we suppose both groups have the
-same sd=0.25.
+## Paired t-test is equivalent to a 2-way ANOVA
 
 ```{r}
 #| label: zeamays
-n = 15
-effect = 0.2
-pots   = rnorm(15, 0, 1)
-noiseh = rnorm(15, 0, 0.25)
-noisea = rnorm(15, 0, 0.25)
-autoz  = pots + noisea
-hybrid = pots + effect + noiseh
+#| echo: TRUE
+#| code-line-numbers: FALSE
+with(darwin.maize, 
+  t.test(height[type == "self"], height[type == "cross"], paired = TRUE))
+  
+fit = lm(height ~ type + pair, data = darwin.maize) 
+anova(fit)
+coef(fit)["typeself"]
 ```
-
-Perform a simple and a paired $t$-test. Which is more powerful in this case?
-
-```{r}
-t.test(hybrid, autoz, paired = FALSE)
-t.test(hybrid, autoz, paired = TRUE)
-```
-
-Maybe we were just lucky (due to randomness in our simulation) here.
-
-To confirm, run a parametric bootstrap experiment. Generate data as above `B=1000` times and compute the average probability of rejection, if allowing for a false positive rate $\alpha=0.05$.
-
-```{r}
-#| label: bootstrapPower
-pvals = replicate(1000, {
-  pots   = rnorm(15,0,1)
-  noiseh = rnorm(15,0,0.25)
-  noisea = rnorm(15,0,0.25)
-  autoz  = pots + noisea
-  hybrid = pots + effect + noiseh
-  sapply(c(FALSE, TRUE), function(prd) 
-    setNames(t.test(hybrid, autoz, paired = prd)$p.value, paste(prd))
-  )
-}) 
-rowMeans(pvals < 0.05)
-```
-
-We can plot the p-values obtained using both methods:
-
-```{r pvaluescompare, fig.width = 3.5, fig.height= 2.5, out.width="80%"}
-#| output-location: fragment
-library("tidyr")
-pivot_longer(as_tibble(t(pvals)), cols = rownames(pvals)) %>%
-  transform(name = paste("paired =", name)) %>%
-  ggplot(aes(x = value, fill = name)) + 
-    geom_histogram(binwidth = 0.02, alpha = exp(-1))
-```
-
-# Exercises   
-
-- Make a function that compares the power of the two types of tests
-for different values of the effect size, sample size, standard deviation among the pots.
-- Use your function to find out which of the standard deviations (pots
-or noise) has the largest effect on the improvement produced by pairing
-for $n = 15$.
-
-```{r powerPairedUnpaired}
-#| label: powerPairedUnpaired
-powercomparison = function(potsd = 1, noisesd = 0.25, n = 15, effect = 0.2,
-                           B = 1000, pthresh = 0.05) {
-  pv = replicate(B, {
-    pots   = rnorm(n, 0, potsd)
-    noiseh = rnorm(n, 0, noisesd)
-    noisea = rnorm(n, 0, noisesd)
-    autoz  = pots + noisea
-    hybrid = pots + effect + noiseh
-    sapply(c(FALSE, TRUE), function(prd) 
-      setNames(t.test(hybrid, autoz, paired = prd)$p.value, paste(prd))
-    )
-  })
-  rowMeans(pv < pthresh)
-}
-```
-
-Here are a few examples showing that when the pots sd is smaller than the
-noise sd, pairing hardly makes a difference. If the pots variability is
-larger than that of the measurement noise, pairing makes a big
-difference.
-
-```{r}
-powercomparison(potsd = 0.5,  noisesd = 0.25)
-powercomparison(potsd = 0.25, noisesd = 0.5)
-powercomparison(potsd = 0.25, noisesd = 0.1)
-powercomparison(potsd = 0.1,  noisesd = 0.25)
-```
-
-For 100 plants of each type and the two SDs being 0.5, the power of the
-paired test is nearly 80%.
-
-```{r}
-powercomparison(potsd = 0.5, noisesd = 0.5, n = 100)
-```
-
-Lesson: take into account a natural pairing of the observations -- for instance, studies of patients before and after a treatment.
-
-What can be done when pairing is not available?
-
-Try to create pairs of subjects that have as much similarity as possible
-through matching age, gender (sex), background health etc. One is treated, the
-other serves as a control.
 
 
 # "Block what you can, randomize what you cannot" 
@@ -612,15 +519,7 @@ In such cases, randomization is a practical strategy: at least in the limit of l
 
 "The design space is divided into uniform units to account for any variation so that observed differences within units are largely due to true differences between treatments. Treatments are then assigned at random to the subjects in the blocks - once in each block. The defining feature of the Randomized Complete Block Design is that each block sees each treatment exactly once." ([Trudi Grant](https://pbgworks.org/sites/pbgworks.org/files/RandomizedCompleteBlockDesignTutorial.pdf))
 
-## Balanced Incomplete Block Design
-![](fig/balincomblock.png){width="50%"}
-
-## Complete Factorial Latin Squares
-![sudoku anyone?](fig/LatinSquare9.png){fig-align="left" width="50%"}
-
-(Latin square: n × n array filled with n different symbols, each occurring exactly once in each row and exactly once in each column)
-
-# Randomization decreases bias
+## Randomization decreases bias
 
  - Humans are bad at assigning treatments truly at random 
  - Random assignment reduces unconscious bias 
@@ -635,54 +534,38 @@ In such cases, randomization is a practical strategy: at least in the limit of l
 ## Random does not mean haphazardly
  - Need to use a random number generator and a seed.
    
-# Controls, positive and negative: why?
 
-We often need to remove variation due to unknown factors, or decompose variability according to its different sources; this is classically done using analysis of variance that can accomodatefactors such as subject or batch effects.
+There is also rich literature on deterministic, balanced block designs.
 
-Usually these decompositions require at least 3 replicate measurements in each `cell`. 
 
-Removal of effects from unknown sources can only be done through the use of **negative controls**. 
+# Thinking of computational methods like we do of biological assays
 
-Calibration of the effect size in an experiment also requires the use of 
-**positive controls**; spike-ins (for instance External RNA Control Consortium
-controls as used in @Risso2014) where a known quantity or a known
-expression level aid in these calibrations and are a standard part of
-many experimental protocols.
+Many biological assays are so fiddly and fickle that we always use them together with positive and negative controls
+(Western blots, CRISPR, PCR...)
 
-Validation in independent data / independent lines of argument
+With sufficiently complicated computational analyses, it can be worthwhile to think of them in the same way.
 
-If it is too good to be true, it usually is....
-
-[Synonymous mutations in representative yeast genes are mostly strongly non-neutral](https://pubpeer.com/publications/E6CD4F8EE374B7D2D398A542684C78)
 
 # How many replicates do I need?
 
-We saw how we can use preliminary data and simulations to calculate how many replicates are needed to achieve, say, a 80% true positive rate, if we know the effect size. 
+In well-controlled experiment: rule of thumb, $n\le 3$. 
 
-Now, recall the discussion of experiments versus studies. 
+In a study: dozens, hundreds.
 
-For the cell line experiment, we might get the correct result already from one replicate; usually we'll do two or three to be sure. 
-
-On the other hand, for the study, our intuition tells us that there is so much uncontrolled variability that 20 is likely far too few, and we may need 200 or 2,000 patients for a reliable result. The number depends on the amount of uncontrolled variability, and the effect size. A pragmatic approach is to check out previous successful (or unsuccessful) experiments or studies that did something comparable and use simulations, subsampling or bootstrapping to get an estimate of our proposed new study's power. Here are more details about how to go about this in practice.
-
-# Power depends on sample sizes, effect sizes and variability.
-
- - Example of two batches with different variability.
- - Examples of one treatment where the variance is larger.
- - Need to accomodate **heteroscedasticity** (unequal variances) with different sample sizes.
+If a factor of interest is continuous (e.g. time, temperature, concentration) and sampled at many points, there usually no need for replication within its levels.
 
 # Effective sample size for dependent data.
 
-Dependent data require **larger** samples (intuition: each sample contains **less** information)
+A sample of independent observations is more informative than the same number of dependent observations. $\Rightarrow$ 
+Dependent data require **larger** samples. Intuition: each sample contains **less** information.
     
-A sample of independent observations is more informative than the same number of dependent observations. 
-
-Suppose you want to do an opinion poll by knocking at people's doors and asking them a question. 
+Consider an opinion poll. We knock at people's doors and ask them a question. 
 
 - Scenario 1: pick $n$ people at $n$ random places throughout the country. 
 - Scenario 2: to save travel time, you pick $n/3$ random places and then at each of these interview three people who live next door to each other. 
 
-In both cases, the number of people polled is $n$, but if we assume that people living in the same neighborhood are more likely to have the same opinion, the data from Scenario 2 are (positively) correlated.  To explore this, let's do a simulation.
+In both cases, $n$ people are polled is $n$.
+But if we assume that people living in the same neighborhood are more likely to have similar opinions, the data from Scenario 2 are (positively) correlated.  
 
 ```{r effective_sample_size_sim, fig.width = 4, fig.height = 2.5, out.width = "80%", fig.cap = "Density estimates for the polling result using the two sampling methods. The correlated method has higher spread. The truth is indicated by the vertical line."}
 doPoll = function(n = 100, numPeoplePolled = 12) {
@@ -698,19 +581,17 @@ ggplot(pivot_longer(as_tibble(t(responses)), cols = rownames(responses)),
   geom_vline(xintercept = 0) + xlab("Opinion poll result")
 ```
 
-There are `r formals(doPoll)$n` people in the country, of which in the first approach (`i1`) we randomly sample `r formals(doPoll)$numPeoplePolled`. In the second approach, we sample `r formals(doPoll)$numPeoplePolled / 3` people as well as two neighbors for each (`i2`). The *opinion* in our case is a real number, normally distributed in the population with mean 0 and standard deviation 1.
+Simulation: "opinions" in a population of `r formals(doPoll)$n` people are $N(0,1)$. We want to estimate the mean by sampling. In scenario 1, we ask `r formals(doPoll)$numPeoplePolled` randomly selected people. In scenario, we ask `r formals(doPoll)$numPeoplePolled / 3` randomly selected people as well as two of their direct neighbours.
 
-We model the spatio-sociological structure of our country by sorting the houses from most negative to most positive opinion in the first line of the `doPoll` function.
-
+<!--We model the spatio-sociological structure of our country by sorting the houses from most negative to most positive opinion in the first line of the `doPoll` function.-->
 
 ##  Time course: equalize the dependence structure by taking more frequent samples when there is more "going on".
-
 
 ![Response to a transient perturbation](fig/SamplingDesignSmall.png){fig-align="left" width="60%"}
 
 # Mean-Variance Relationships and Transformations
 
-You've seen examples for data transformations that compress or stretch the space of quantitativemeasurements in such a way that the measurements' noise variance  (**not:** the signal variance) is more similar throughout -- i.e., no longer highly dependent on the mean value.
+You've seen examples for data transformations that compress or stretch the space of quantitative measurements in such a way that the measurements' noise variance  (**not:** the signal variance) is more similar throughout -- i.e., no longer highly dependent on the mean value.
 
 The mean-variance relationship of a measurement technology can in principle be any function, but in many cases, the following prototyic relationships hold:
 
@@ -853,82 +734,26 @@ may have been labeled as noise.
 
 # Sharpen Your Tools: Reproducible Research
 
-Analysis projects often begin with a simple script, perhaps to try out a
-few initial ideas or explore the quality of the pilot data. Then more
-ideas are added, more data come in, other datasets are integrated, more
-people become involved. Eventually the paper needs to be written,
-figures be redone properly, and the analysis be saved for the
+Analysis projects often begin with a simple script, exploration, prototyping.
+
+- Many ideas are tried, dissmissed, adapted.
+- More data come in, external datasets are integrated
+- More people become involved. 
+
+Eventually, the paper needs to be written, figures be done properly, analysis be saved for the
 scientific record and to document its integrity. Here are a few tools
-that can help with such a process.
+that can help.
 
-**Use an integrated development environment.** <span>RStudio</span> is a
-great choice; there are also other platforms such as Emacs or Eclipse.
-
-**Use literate programming** tools such as <span>Rmarkdown</span> or
-Jupyter. This is more readable (for yourself and for others) than
-burying explanations and usage instructions in comments in the source
-code or in separate README files, in addition you can directly embed
-figures and tables in these documents. Such documents are often good
-starting points for the supplementary material of your paper.
-
-**Anticipate re-engineering of the data formats and the software.** The
-first version of how you choose to represent the data and structure the
-analysis workflows will rarely be the best. Don't be afraid to make
-a clean cut and redesign them as soon as you notice that you are doing a
-lot of awkward data manipulations or repetitive steps. This is time
-well-invested. Sometimes it also helps to unearth bugs.
-
-**Reuse existing tools.** Don't reinvent the wheel and rather spend your
-time on things that are actually new. Before implementing a 'heuristic'
-or a temporary hack that analyses your data in a certain way, spend a
-couple of minutes researching to see if something like this hasn't been
-done before. More often than not, it has, and there is a clean,
-scalable, and already tested solution.
-
-**Use version control**, such as git. This takes some time to learn, but in
-the long run will be infinitely better than all your self-grown attempts
-at managing evolving code with version numbers, switches and the like.
-Moreover, this is also the sanest option for collaborative work on code,
-and it provides an extra backup of your codebase, especially if the
-server is distinct from your workplace machine.
-
-**Use functions** rather than copy-pasting 
-stretches of code.
-
-**Use the R package system.** Soon you'll note recurring function or
-variable definitions that you want to share between your individual
-scripts. It is fine to use the R function to manage them initially, but
-it is never to early to move them into your own package at the latest
-when you find yourself starting to write README files or long emails
-explaining others how to use some script or another. Assembling existing
-code into an R package is not hard by any means, and offers you many
-goodies including standardized and convenient ways to provide
-documentation, to show code usage examples, to test the correct
-functioning of your code, and to version it. Quite likely you'll soon
-appreciate the benefit of using namespaces.
-
-**Centralize the location of the raw data files and streamline the
-derivation of intermediate data.** Store the input data at a centralized
-file server that is professionally backed up. Mark the files as
-read-only. Have a clear and linear workflow for computing the derived
-data (e.g., normalised, summarised, transformed etc.) from the raw files,
-and store these in a separate directory. Anticipate that this workflow
-will need to be re-run several times, and version it. Use or similar
-tools to mirror these files on your personal computer.
-
-**Integration.** When developing downstream analysis ideas that bring
-together several different data types, you don't want to do the
-conversion from data type specific formats to the representations that
-machine learning or generic statistical methods use each time on an ad
-hoc basis. Have a *recipe* script that assembles the different
-ingredients and cooks them up as an easily consumable matrix, data
-frame or Bioconductor.
-
-**Keep a hyperlinked webpage with an index of all analyses.** This is
-helpful for collaborators (especially if the page and the analysis can
-be accessed via a web browser) and also a good starting point for the
-methods part of your paper. Structure it in chronological or logical
-order, or a combination of both.
+- **Use an integrated development environment (IDE):** RStudio/Posit; VS Code; IDLE...
+- **Use literate programming** tools: Rmarkdown, quarto, JuPyteR. 
+- **Anticipate re-engineering of the data formats and the software.** 
+  * **Use functions** rather than copy-pasting stretches of code.
+  * **Reorganize data** upfront rather than repeatedly on the fly.
+  * **Centralize** the location of the raw data files, streamline & automate the derivation of intermediate data. 
+- **Reuse existing tools.** 
+- **Use version control**, such as git.
+- **Use the R package system.** 
+- **Keep a hyperlinked webpage with an index of all analyses.** 
 
 # Data representation
 
