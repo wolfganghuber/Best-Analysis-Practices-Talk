@@ -10,6 +10,8 @@ format:
     scrollable: true
     slide-number: c/t
     show-slide-number: all
+  html:
+    code-line-numbers: false
 execute: 
   echo: false
   warning: true
@@ -345,109 +347,120 @@ Physician Scientist
 His *Canon of Medicine (1020)*  lists seven rules of experimental design, including the need for controls and replication, the danger of confounding and the necessity of changing only one factor at a time.
 :::
 
+::: {.fragment}
+This dogma was overthrown in the 20th century by RA Fisher.
 :::
-## This dogma was overthrown in the 20th century by RA Fisher.
 
-
-# Comparing two levels of one factor: healthy or diseased.
+# A toy example: two-group comparison
 
 ```{r}
 #| label: illustrateboxplots
 #| echo: false
 require("gridExtra")
 library("ggplot2")
-library("ggbeeswarm")
 library("dplyr")
-states = factor(c("healthy", "tumor")[rep(c(1, 2), 6)])
-times = c(1,1,1,1,2,2,2,2,3,3,3,3)
-facte = 0.5 * times
-`Biomarker A` = rep(c(1.5,2), 6) + rnorm(12,0,0.1)
-`Biomarker B` = facte + rep(c(0.5,1), 6) + rnorm(12,0,0.3)
-`Biomarker C` = rep(c(1.5,2),60) + rnorm(120,0,0.3)
-batch = factor(c("Batch1", "Batch2")[rep(c(1,2),6)])
-states_60 = factor(c("healthy","tumor")[rep(c(1,2),60)], levels=c("healthy","tumor"))
-dfN = tibble(states_60,`Biomarker C`)
-mN = summarise(group_by(dfN, states_60),med=median(`Biomarker C`))
-pN = ggplot(dfN, aes(x=states_60, y=`Biomarker C`))
+n1 = 6L
+n2 = 24L
 
-pN1= pN+geom_boxplot(alpha=0.5,col="blue") +
-      geom_point(size=2,alpha=0.5) +
-  geom_segment(data=mN,aes(y=med[1],yend=med[2]),x=1.5,xend=1.5, col="red",arrow = arrow(length = unit(0.25, "cm"), ends = "both", type = "closed"))
-  
-pNb=pN+geom_boxplot(alpha=0.5,col="blue")+
-      geom_beeswarm(size=2,alpha=0.5)
+df0 = tibble(
+  condition = factor(paste("condition", rep(c(1, 2), n1))),
+  batch     = factor(paste(             rep(c(1, 2), n1))),
+  y = c(1.5,2)[as.integer(condition)] + rnorm(2*n1, 0, 0.1)
+)
 
-batdef=tibble(states,`Biomarker B`,`Biomarker A`,times,batch)
-ms0=summarize(group_by(batdef,states),y=median(`Biomarker A`))
-p0= ggplot(batdef, aes(x=states, y=`Biomarker A`))
-p0= p0+geom_boxplot(alpha=0.5,col="blue") +
-  geom_point(size=2)
-p0batch= ggplot(batdef, aes(x=states, y=`Biomarker A`,color=batch))
-p0batch= p0batch+geom_boxplot(alpha=0.5,col="blue") +
-  geom_point(size=2) + theme(legend.position = "none")
-p0effect= p0 + geom_segment(
-  data = ms0, aes(y = y[1], yend = y[2]),
-  x = 1.5,  xend = 1.5, col="red",
-  arrow = arrow(length = unit(0.25, "cm"), ends = "both", type = "closed"))
+df1 = tibble(
+  condition = factor(paste("condition", rep(c(1, 2), n1))),
+  batch = factor(seq_len(2*n1) %% 3),
+  y = c(1.5,2)[as.integer(condition)] + c(-0.5, 0, 0.5)[as.integer(batch)] + rnorm(2*n1, 0, 0.3)
+)
 
-p = ggplot(batdef, aes(states, `Biomarker B`, times))
-p2 = p + geom_boxplot() +  
-  geom_point(color=times,size=2,alpha=0.5)
-p1 = p + geom_boxplot(alpha=0.5,col="blue") +  
-  geom_point(size=2,alpha=0.5)
+df2 = tibble(  
+  condition = factor(paste("condition", rep(c(1, 2), n2))),
+  batch = factor(seq_len(2*n2) %% 3),
+  y = c(1.5,2)[as.integer(condition)] + c(-0.5, 0, 0.5)[as.integer(batch)] + rnorm(2*n2, 0, 0.3)
+)
+
+myplot = function(x)
+  ggplot(x, aes(x = condition, y = y)) + 
+      geom_boxplot(alpha = 0.5, col = "blue") +
+      geom_point(size = 2, alpha = 0.75)  + xlab("") 
+
 ```
 
-```{r p0p0eff, fig.width = 4, fig.height = 2, out.width="100%"}
+```{r p0p0eff, fig.width = 4, fig.height = 2, out.width="80%"}
+p0  = myplot(df0)
+ms0 = summarize(group_by(df0, condition), m = median(y))
+p0effect = p0 + geom_segment(
+  data = ms0, aes(y = m[1], yend = m[2]),
+  x = 1.5,  xend = 1.5, col="red",
+  arrow = arrow(length = unit(0.25, "cm"), ends = "both", type = "closed"))
 grid.arrange(p0, p0effect, ncol = 2)
 ```
 
 However, suppose the experiment was done in two "batches", and we color the data according that:
 
-```{r p0p0batch, fig.width = 4, fig.height = 2, out.width="100%"}
-grid.arrange(p0, p0batch, ncol = 2)
+```{r p0p0batch, fig.width = 5, fig.height = 2, out.width="80%"}
+p0batch = p0 + aes(x = condition, y = y, color = batch) 
+grid.arrange(p0, p0batch, ncol = 2, widths = c(0.44, 0.56))
 ```
 
-We cannot conclude because we are in the presence of **confounding**.
+We cannot conclude because of **confounding**.
 
-Now suppose the experiment has higher noise levels, and the same number of points as in the previous study. Then, the sample sizes (2 x 6) is not enough. With the same error and a bigger sample size (2 x 60), it looks better.
+Now suppose there is no such fatal confounding, but an unknown batch effect that is balanced between the conditions, 
+and effectively causes higher noise levels.
+Then, the previous sample size (2 x `r n1`) is not enough. With 2 x `r n2`, it looks better:
 
-```{r, fig.width = 4, fig.height = 2, out.width="100%"}
-grid.arrange(p1, pN1, ncol=2)
+```{r, fig.width = 4, fig.height = 2, out.width="80%"}
+p1 = myplot(df1)+ ylim(c(0, 3.1))
+p1batch = p1 + aes(x = condition, y = y, color = batch) 
+
+p2 = myplot(df2)   
+
+grid.arrange(p1 + xlab(paste("p =", format.pval(t.test(y ~ condition, data = df1)$p.value, digits = 2))), 
+             p2 + xlab(paste("p =", format.pval(t.test(y ~ condition, data = df2)$p.value, digits = 2))), 
+             ncol = 2)
 ```
 
-The experiment at $n_1=n_2=6$ is not **powerful** enough.
 
-```{r}
-t.test(`Biomarker B` ~ states, data = batdef)
-```
+# Lessons from the toy example
 
-With the same effect size and a larger sample size,
-we have the **power** to see the difference:
-
-```{r}
-t.test(`Biomarker C`~ states_60, data = dfN)
-```
-
-# Lessons from these toy examples
-
- - Success of an experiment: seeing difference if it is truely there.
- - Knowing where the difference comes from.      
- - True positive rate: power.
- - Spread (e.g., variances) matters as much as the locations (e.g., means).
+ - Success of an experiment: detect a difference iff it is truly there, and for the right reasons
+ - Spread (sd, var) matters as much as the effect size
  
 Depends on: 
 
 1) Effect size (**unchangeable**)
 2) Control and documentation of all factors (block effects, date / time / operator etc.).
-3) Noise (variability in measurements)
-4) Sample size: remember the standard error of the mean is $$\frac{\sigma^2}{n}$$
+3) Noise (irreducible variability in measurements): $\sigma$
+4) Sample sizes: remember standard error of mean is $\sim\frac{\sigma}{\sqrt{n}}$
  
-# Decomposition of variability: analysis of variance.
+# Decomposition of variability: analysis of variance (ANOVA)
 
-```{r block, fig.width = 4, fig.height = 2, out.width="100%"} 
-#| echo: false
-grid.arrange(p1,p2, ncol=2)
+::: {layout-ncol=1}
+
+```{r}
+#| label: block1
+#| fig-width: 5
+#| fig-height: 2
+#| out.width: "100%" 
+grid.arrange(p1, p1batch, ncol=2, widths = c(0.44, 0.56))
 ``` 
+
+:::
+
+```{r}
+#| label: block2
+#| echo: TRUE
+#| code-line-numbers: FALSE
+lm(y ~ condition, data = df1) |> anova()
+```
+$\quad$
+```{r}
+#| label: block3
+#| echo: TRUE
+#| code-line-numbers: FALSE
+lm(y ~ condition + batch, data = df1) |> anova()
+```
 
 # Blocking: the case of paired experiments.
 
@@ -459,6 +472,15 @@ grid.arrange(p1,p2, ncol=2)
 :::
 
 ::: {.column width="55%"}
+
+Darwin's *Zea Mays* experiment:
+
+```{r}
+#| echo: !expr 2
+data(darwin.maize, package= "agridat")
+head(darwin.maize)
+```
+
 Each pot in Darwin's *Zea Mays* experiment is a block, only the factor of interest should be different (pollination method), all other factors should be kept equal within a block.<br> A balanced design is an experimental design where all the different factor combinations have the same number of observation replicates.  Such data are particularly easy to analyse because the effect of each factor is identifiable.<br> When there are (likely) nuisance factors, it is good to make sure they are balanced with the factors of interest. Sometimes this is inconvenient or impractical for logistic or economic reasons -- but in such cases analysts are on thin ice and need to proceed with caution.|
 :::
 
@@ -932,6 +954,7 @@ This dataframe has `r ncol(df)` columns of data, one for each sample (annotated 
 
 ```{r}
 #| label: pivot_longer
+library("magrittr")
 dfw$probeid = rownames(dfw)
 dfl = pivot_longer(dfw, 
             cols = colnames(x),
