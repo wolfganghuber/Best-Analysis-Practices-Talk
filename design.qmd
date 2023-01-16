@@ -10,12 +10,15 @@ format:
     scrollable: true
     slide-number: c/t
     show-slide-number: all
+    auto-stretch: false
+# auto-stretch is a huge source of grief for slide layout, see https://quarto.org/docs/presentations/revealjs/advanced.html --> stretch
   html:
     code-line-numbers: false
+server: shiny
 execute: 
   echo: false
   warning: true
-  error: true
+  error: false
   message: false
 slide-level: 1
 bibliography: refs.bib
@@ -567,7 +570,8 @@ Consider an opinion poll. We knock at people's doors and ask them a question.
 In both cases, $n$ people are polled is $n$.
 But if we assume that people living in the same neighborhood are more likely to have similar opinions, the data from Scenario 2 are (positively) correlated.  
 
-```{r effective_sample_size_sim, fig.width = 4, fig.height = 2.5, out.width = "80%", fig.cap = "Density estimates for the polling result using the two sampling methods. The correlated method has higher spread. The truth is indicated by the vertical line."}
+```{r effective_sample_size_sim, fig.width = 4, fig.height = 2.5, out.width = "80%", message = FALSE, fig.cap = "Density estimates for the polling result using the two sampling methods. The correlated method has higher spread. The truth is indicated by the vertical line."}
+library("tidyr")
 doPoll = function(n = 100, numPeoplePolled = 12) {
   opinion = sort(rnorm(n))
   i1 = sample(n, numPeoplePolled)
@@ -589,26 +593,28 @@ Simulation: "opinions" in a population of `r formals(doPoll)$n` people are $N(0,
 
 ![Response to a transient perturbation](fig/SamplingDesignSmall.png){fig-align="center" width="60%"}
 
-# Data transformations ($\log(x)$ et al.)
-
-Why?
+# Data transformations
 
 \begin{equation}
-Y_{\text{obs}} = f(\theta) + \varepsilon
+X_{\text{obs}} = f(\theta) + \varepsilon
 \end{equation}
 
 - Homoskedastic: $\quad\text{sd}(\varepsilon)=\text{const.}$
 - Heteroskedastic: e.g., 
-  + multiplicative error: $\quad\text{sd}(\varepsilon)\sim f(\theta)$.
-  + Poisson noise: $\quad\text{var}(\varepsilon)\sim f(\theta)$.
+
+  + multiplicative error: $\quad\text{sd}(\varepsilon)\sim f(\theta)$
+  + Poisson noise: $\quad\text{var}(\varepsilon)\sim f(\theta)$
+
+![](fig/delta_method_modified.png){fig-align="center" width="60%"}
+
+- multiplicative error: $\log(X)$
+- Poisson noise: $\sqrt X$
 
 Examples:
 
-- Fluorescence based assays: often additive + multiplicative [@RockeDurbin:2001] 
+- Fluorescence based assays: additive + multiplicative [@RockeDurbin:2001] 
 - RNA-Seq: Poisson + multiplicative.
 
-
-![](fig/delta_method_modified.png){fig-align="center" width="100%"}
 
 # Data quality assessment and quality control
 
@@ -661,8 +667,7 @@ Longitudinal data have time as a covariate.
   -   Ordinary differential equations or reaction-diffusion models
   -   Piece-wise deterministic stochastic processes
   -   Autoregressive models
-  -   Non-parametric smoothing followed by clustering or classification
-    into prototypic shapes
+  -   Non-parametric smoothing followed by clustering or classification into prototypic shapes
 
 # Don't Pretend You Are Dumb
 
@@ -759,6 +764,7 @@ A single cell expression data matrix (Hiiragi2013 package) data (only the first 
 
 ```{r}
 #| label: wide
+library("SummarizedExperiment")
 data("x", package = "Hiiragi2013")
 dfw = as.data.frame(exprs(x))
 dfw[1:5, 1:5]
