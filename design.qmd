@@ -755,7 +755,7 @@ Errors can occur, lost labels, lost information: be safe, redundancy is good.
 
 # Wide vs long table format
 
-A single cell expression data matrix (Hiiragi2013 package) data (only tfirst 5 rows and columns):
+A single cell expression data matrix (Hiiragi2013 package) data (only the first 5 rows and columns):
 
 ```{r}
 #| label: wide
@@ -765,7 +765,7 @@ dfw[1:5, 1:5]
 dim(dfw)
 ```
 
-This dataframe has `r ncol(df)` columns of data, one for each sample (annotated by the column names). Its rows correspond to the `r nrow(df)` probes, annotated by the probe identifiers. This is an example for a data table in *wide format*.
+This is an example for a data table in *wide format*.
 
 ```{r}
 #| label: pivot_longer
@@ -806,7 +806,7 @@ See also https://www.huber.embl.de/msmb/Chap-Design.html#tidy-data-using-it-wise
 
 ## Efficiency (lack of)
 
-Even though there are only `r nrow(dfw)` probe-gene symbol relationships, we are storing them `r nrow(dfl)` times in the rows of `dfl`. 
+Even though there are only 45101 probe-gene symbol relationships, we are storing them 4555201 times in the rows of `dfl`. 
 
 ## Standardization (lack of)
 
