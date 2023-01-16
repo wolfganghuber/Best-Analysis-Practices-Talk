@@ -587,59 +587,50 @@ Simulation: "opinions" in a population of `r formals(doPoll)$n` people are $N(0,
 
 ##  Time course: equalize the dependence structure by taking more frequent samples when there is more "going on".
 
-![Response to a transient perturbation](fig/SamplingDesignSmall.png){fig-align="left" width="60%"}
+![Response to a transient perturbation](fig/SamplingDesignSmall.png){fig-align="center" width="60%"}
 
-# Mean-Variance Relationships and Transformations
+# Data transformations ($\log(x)$ et al.)
 
-You've seen examples for data transformations that compress or stretch the space of quantitative measurements in such a way that the measurements' noise variance  (**not:** the signal variance) is more similar throughout -- i.e., no longer highly dependent on the mean value.
+Why?
 
-The mean-variance relationship of a measurement technology can in principle be any function, but in many cases, the following prototyic relationships hold:
+\begin{equation}
+Y_{\text{obs}} = f(\theta) + \varepsilon
+\end{equation}
 
-1.  constant: the variance is independent of the mean ("additive noise", $Y=\mu+\varepsilon$)
+- Homoskedastic: $\quad\text{sd}(\varepsilon)=\text{const.}$
+- Heteroskedastic: e.g., 
+  + multiplicative error: $\quad\text{sd}(\varepsilon)\sim f(\theta)$.
+  + Poisson noise: $\quad\text{var}(\varepsilon)\sim f(\theta)$.
 
-2.  Poisson: the variance is proportional to to the mean ("shot noise", $N\sim\text{Poi}(\mu)$)
+Examples:
 
-3.  quadratic: the standard deviation is proportional to the mean,
-    therefore the variance grows quadratically ("multiplicative noise", $Y=\mu \cdot e^\varepsilon$)
+- Fluorescence based assays: often additive + multiplicative [@RockeDurbin:2001] 
+- RNA-Seq: Poisson + multiplicative.
 
-Do you know examples for biological assays (or measurement technologies) whose
-data show these types of relationships?
 
-Real data can also be affected by a combination of these. For instance:
-
-- with DNA microarrays, the fluorescence intensities are subject to a
-combination of background noise that is largely independent of the
-signal (additive noise), and multiplicative noise whose standard deviation is
-proportional to the signal [@RockeDurbin:2001]. Therefore, for bright
-spots the multiplicative noise dominates, whereas for faint ones, the
-background.
-
-- in RNA-Seq, low counts are dominated by Poisson noise, high counts by the multiplicative noise.
-
-We recall from Chapter 5 that for data with a mean-variance
-relationship $v(\mu)$ the variance-stabilizing transformation
-$g:\mathbb{R}\to\mathbb{R}$ fulfills the condition
-$$g'(x)=\frac{1}{\sqrt{v(x)}}$$
-
-a) What are the variance-stabilizing transformations associated with the
-above three prototypic mean-variance relationships?
-b) What is the variance stabilizing transformation that is appropriate
-for $v(\mu) = v_0 + c\,\mu^2$, where $v_0>0$ is a positive constant?
-
+![](fig/delta_method_modified.png){fig-align="center" width="100%"}
 
 # Data quality assessment and quality control
 
-- data quality assessment (QA): steps taken to measure and monitor data quality
-- data quality control (QC): removing bad data
+- QA: measure and monitor data quality
+- QC: remove bad data
 
-These pervade all phases of an analysis, from assembling the raw data over transformation, summarization, model fitting, hypothesis testing or screening for ''hits'' to interpretation.  QA-related questions include:
+Pervade all phases of analysis: raw data, transformation, summarization, model fitting, hypothesis testing, screening for ''hits''. Diagnostics and metrics:
 
-- How do the marginal distributions of the variables look (histograms, ECDF plots)?
-- How do their joint distributions look (scatter plots, pairs plot)?
-- How well do replicates agree (as compared to different biological conditions)? Are the magnitudes of the differences between several conditions plausible?
-- Is there evidence of batch effects? These could be of a categorical (stepwise) or continuous (gradual) nature, e.g., due to changes in experimental reagents, protocols or environmental factors. Factors associated with such effects may be explicitly known, or unkown and latent; often they are somewhere in between (e.g., when a measurement apparatus slowly degrades over time)
+- Feature value range (Boxplot, ECDF) across samples
+- Joint distributions (scatter plots, heatmaps, sample-sample or feature-feature correlation matrices)?
+- Correlation of replicates vs between biological conditions
+- Evidence of batch effects (categorical, continuous)—--explicitly known or latent.
 
-For the last two sets of questions, heatmaps, principal component plots and other ordination plots are useful.
+![](fig/mv-v19-2274-Fig2.png){fig-align="center" width="80%"}
+
+- [iSEE](https://doi.org/doi:10.18129/B9.bioc.iSEE) package:
+[PBMC4k example](https://marionilab.cruk.cam.ac.uk/iSEE_pbmc4k), 
+[CYTOF example](https://marionilab.cruk.cam.ac.uk/iSEE_cytof)
+
+- [MatrixQCVis](https://doi.org/doi:10.18129/B9.bioc.MatrixQCvis) package:
+
+
 
 ::: {.columns}
 
@@ -649,9 +640,9 @@ For the last two sets of questions, heatmaps, principal component plots and othe
 :::
 
 ::: {.column width="50%"}
-Henry Ford's (possibly apocryphal) quote: ''If I had asked people what they wanted, they would have said faster horses.'' (https://corporate.ford.com/history.html) expresses the view of quality as **fitness for purpose**, versus **adherence to specifications**.
+Henry Ford (possibly apocryphal): [''If I had asked people what they wanted, they would have said faster horses.''](https://corporate.ford.com/history.html): quality as **fitness for purpose**, versus **adherence to specifications**.
 
-It is not easy to nail down (mathematically define)  quality, and the word is used with many meanings. See also http://en.wikipedia.org/wiki/Quality_(business) 
+Not easy to nail down (or mathematically define) quality, the word is used with many meanings. See also http://en.wikipedia.org/wiki/Quality_(business) 
 :::
 
 :::
@@ -757,15 +748,14 @@ that can help.
 
 # Data representation
 
-Combining all the data so it is ready for analysis or visualisation often involves a lot of shuffling around of the data, until they are in the right shape and
-format for an analytical algorithm or a graphics routine. 
+Combining all the data so it is ready for analysis or visualisation often involves a lot of shuffling around of the data, until they are in the right shape and format for an analytical algorithm or a graphics routine. 
 
 Errors can occur, lost labels, lost information: be safe, redundancy is good.
 
 
 # Wide vs long table format
 
-Recall Hiiragi data (for space reasons we print only the first five rows and columns):
+A single cell expression data matrix (Hiiragi2013 package) data (only tfirst 5 rows and columns):
 
 ```{r}
 #| label: wide
