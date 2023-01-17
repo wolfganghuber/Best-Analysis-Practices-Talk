@@ -2,6 +2,7 @@
 title: 'Good scientific practice: <a href="https://www.huber.embl.de/msmb/Chap-Design.html">Design of High Throughput Experiments and their Analysis</a>'
 author: Susan Holmes, Wolfgang Huber
 date: 2023-01-17
+date-format: iso
 format:
   revealjs: 
     theme: [default, GHGA.scss]
@@ -53,7 +54,7 @@ R.A. Fisher, Pioneer of Statistics and Experimental Design
 This lecture is based on Chapter 13 of the book<br>
 *Modern Statistics for Modern Biology*<br>
 by Susan Holmes, Wolfgang Huber<br>
-[https://www.huber.embl.de/msmb](https://www.huber.embl.de/msmb)
+[https://www.huber.embl.de/msmb/](https://www.huber.embl.de/msmb/)
 
 ![](fig/book-cover-photo.jpg){width="10%" fig-align="center"} 
 
@@ -61,14 +62,16 @@ by Susan Holmes, Wolfgang Huber<br>
 
 # Topics
 
--   Resource allocation and experimental design: a matter of trade-offs and good judgement
+-   Resource allocation & experimental design: a matter of trade-offs & good judgement
 -   Dealing with the different types of variability; partitioning variability
--   Types of experiments, studies, ...
+-   Experiments, studies, ...
 -   Power, sample size and efficiency.
 -   Transformations
 -   Things to worry about: dependencies, batch effects, unwanted variation.
 -   Compression, redundancy and sufficiency
 -   Computational best practices
+
+![](fig/Garten-der-Lueste-mitte-oben.png){width="100%"}
 
 # The Art of "Good Enough"
 
@@ -79,6 +82,10 @@ by Susan Holmes, Wolfgang Huber<br>
 - Our measurements may be overlaid with nuisance factors over which we have limited control. 
 - There is little point in prescribing unrealistic ideals: we need to make pragmatic
 choices that are feasible.
+
+
+# Accuracy vs precision
+![](fig/accuracy-vs-bias.png)
 
 # Types of studies / experiments
 
@@ -114,12 +121,24 @@ We administer a precise amount of a drug, and after
 
 # Illustration: challenges with studies
 
+::: {.columns}
+
+::: {.column width="60%"}
 We recruit patients with a chronic disease and who fulfill 
 inclusion criteria, and we ask them to take a drug each day exactly at 6 am. 
 Before, and after 3 months, we perform a diagnostic test. 
 
 - People may forget to take the pill or take it at the wrong time. 
 - Some may feel that the disease got worse and stop taking the drug.
+
+:::
+
+::: {.column width="40%"}
+![](fig/Cutting-stone-of-madness.png)
+:::
+
+:::
+
 - Some may feel that the disease got better and stop taking the drug. 
 - Some may lead a healthy life-style, others drink, smoke and eat junk food. 
 - Maybe it's not one disease but several
@@ -155,6 +174,11 @@ For reliable variant calling with current sequencing technology, you need ca. $3
 
 In the *1000 Genomes Project*, the average depth of the data produced was 5.1 for 1092 individuals. Why was that study design chosen?
 
+$\quad$
+
+$\quad$
+
+![](fig/Garten-der-Lueste-mitte-unten.png){width="80%" fig-align="center"}
 
 # What exactly is a technical versus biological replicate?
 
@@ -183,6 +207,7 @@ These effects are not universal, but can also depend on factors like concentrati
 
 When looking at RNA-Seq data, should we treat GC content as noise or as bias? 
 
+![](fig/portrait-of-shi-xie-and-his-studio.png){width="80%" fig-align="center"}
 
 # One person's noise can be another's bias
 
@@ -211,33 +236,23 @@ We use mathematical and probabilistic modelling as a method to bring some order 
 ignorance, not an objective property of the world. 
 
 
-# Occam's razor
+# A lack of units
 
 ::: {.columns}
 
+::: {.column width="60%"}
+Pre-modern measurement systems measured lengths in feet, ells, inches (first joint of an index finger), weights in stones, volumes in multiples of the size of a wine jar, etc.  
+
+In the [International System of Units](https://en.wikipedia.org/wiki/International_System_of_Units), meters, seconds, kilograms, amperes, ... are defined based on universal physical constants. 
+:::
+
 ::: {.column width="40%"}
-![William of Ockham](fig/William_of_Ockham.png)
-:::
-
-:::{.column width="60%"}
-
-If one can explain a phenomenon without assuming this or that hypothetical entity, there is no ground for assuming it.
-
-One should always opt for an explanation in terms of the fewest possible causes, factors, or variables.
-
+![](fig/2420_titelblatt_mathematikbuch.jpg)
 :::
 
 :::
 
-# Accuracy vs precision
-![](fig/accuracy-vs-bias.png)
-
-
-# A lack of units
-
-Pre-modern measurement systems measured lengths in feet, ells, inches (first joint of an index finger), weights in stones, volumes in multiples of the size of a wine jar, etc.
-
-In the [International System of Units](https://en.wikipedia.org/wiki/International_System_of_Units), meters, seconds, kilograms, amperes, ... are defined based on universal physical constants. There is no reliance on artefacts, and a meter measured by a lab in Canada using one instrument has the same meaning as a meter measured a year later by a lab in Heidelberg using a different instrument, by a space probe in the Kuiper belt, or by an extraterrestrial intelligence on Proxima Cen b.
+There is no reliance on artefacts, and a meter measured by a lab in Canada using one instrument has the same meaning as a meter measured a year later by a lab in Heidelberg using a different instrument, by a space probe in the Kuiper belt, or by an extraterrestrial intelligence on Proxima Cen b.
 
 Measurements in biology are, unfortunately, rarely that comparable. 
 
@@ -289,18 +304,55 @@ Possible figure of merit?
 
 - signal-to-noise ratio, computed from pos. and neg. controls, replicates
 
+# Occam's razor
+
+::: {.columns}
+
+::: {.column width="40%"}
+![William of Ockham](fig/William_of_Ockham.png)
+:::
+
+:::{.column width="60%"}
+
+If one can explain a phenomenon without assuming this or that hypothetical entity, there is no ground for assuming it.
+
+One should always opt for an explanation in terms of the fewest possible causes, factors, or variables.
+
+:::
+
+:::
+
 
 # Regular and catastrophic noise
+
+::: {.columns}
+
+::: {.column width="60%"}
 
 Regular noise: can be modeled by simple probability models (independent normal, Poisson distributions; or mixtures such as
 Gamma-Poisson or Laplace) 
 
-We can use relatively straightforward methods to take regular noise into account in our data analyses.
+Can use relatively straightforward methods to take regular noise into account
 
-The real world is more complicated: measurements can be completely off the scale (a sample swap, a contamination or a software bug). 
+Real world is more complicated: measurements can be completely off the scale (sample swap, contamination, software bug, ...)
+
 Multiple errors often come together: e.g., a whole microtiter plate went bad, affecting all data measured from it. 
 
+:::
+
+::: {.column width="40%"}
+![](fig/Train_wreck_at_Montparnasse_1895.jpg)
+:::
+
+:::
+
 Such events are hard to model or even correct for---our best chance is data quality assessment, outlier detection and documented removal.
+
+# RNAi screen example
+
+<div style="text-align: center;"> 
+![](fig/RNAiScreen.png){width="55%"}
+</div>
 
 
 # Keeping track: Dailies
@@ -326,30 +378,22 @@ the data and enable you to adjust the protocol.
 It is important to be aware of sources of variation as they occur and adjust for them.
 
 
-# RNAi screen example
-
-<div style="text-align: center;"> 
-![](fig/RNAiScreen.png){width="55%"}
-</div>
-
-
 # Vary one factor at a time
 
 ::: {.columns}
 
 ::: {.column width="33%"}
-Ibn Sina (Avicenna)
-![Avicenna](fig/Avicenna.png){width="100%"}
-
+![Ibn Sina (Avicenna)](fig/Avicenna.png){width="100%"}
 :::
 
 ::: {.column width="33%"}
-Physician Scientist
-![The Physician](fig/medicus.jpeg){height="75%"}
+![](fig/medicus.jpeg){height="75%"}
 :::
 
 ::: {.column width="30%"}
-His *Canon of Medicine (1020)*  lists seven rules of experimental design, including the need for controls and replication, the danger of confounding and the necessity of changing only one factor at a time.
+[Ibn Sina's](https://en.wikipedia.org/wiki/Avicenna) *Canon of Medicine (1020)*  lists seven rules of experimental design, including the need for controls and replication, the danger of confounding and the necessity of changing only one factor at a time.
+:::
+
 :::
 
 ::: {.fragment}
@@ -509,6 +553,23 @@ anova(fit)
 coef(fit)["typeself"]
 ```
 
+# t-test comments
+
+The proof that the $t$-statistic follows a certain $t$-distribution assumes that observations are independent and follow a normal distribution: this is a sufficient, but not necessary, condition.
+
+<span style="color:red">Deviation from normality</span> (heavier tails): test typically maintains type-I error control (it may loose some power).
+
+Options: use simulations or permutations; use a different test (e.g., Wilcoxon)
+
+<span style="color:red">Deviation from independence</span>: type-I error control is lost, p-values will likely be totally wrong (e.g., for positive correlation, too optimistic).
+
+No easy options: 
+
+- try to model the dependence (multivariate analysis)
+- remove it 
+- empirical null (Efron et al.) 
+
+[Demo shiny app](http://127.0.0.1:5794)
 
 # "Block what you can, randomize what you cannot" 
 
@@ -673,32 +734,33 @@ Longitudinal data have time as a covariate.
 
 # Don't Pretend You Are Dumb
 
-There is some attraction to seemingly "unbiased" approaches that analyse
-the data at hand without any reference to what is already known. Such
-tendencies are reinforced by the fact that statistical methods have
-often been developed to be generic, for instance, working of a general
-matrix without specific reference to what the rows and column might
-signify.
+- Pros and cons of "unbiased" approaches 
 
-Generic approaches are a good way to get started, and for analyses that are highly powered and straightforward, such an an approach might work out. But often, it is wasteful. Recall the example of an RNA-Seq experiment for differential expression. As we saw in the *RNA-Seq* and *Hypothesis Testing* lectures, we could perform a hypothesis test for differential expression for each annotated gene, regardless of its read counts, and then run a multiple testing method that treats all tests as exchangeable. But this is inefficient - we can improve our detection power by filtering out, or downweighting, the hypotheses with lower test power, or with lower prior probability of being alternative.
+Examples include:
 
-Other examples include:
+- Clustering vs (semi-)supervised classification
 
--   Penalisation or feature selection in high-dimensional regression or
-    classification. It is easy to use schemes that treat all features
-    the same, for instance, standardize all of them to zero mean and
-    unit variance. But sometime we know that some classes of features
-    are likely to be more or less informative than
-    others.
+- Multiple testing / hypothesis weighting ($\to$ independent hypothesis weighting, et al.) 
 
--   You can also use graphs to represent "other" data (networks) and use
-    approaches like the group or graph lasso to
-    structure your penalties in high-dimensional modelling.
+- Feature scaling
 
--   Unsupervised clustering of your objects of interests (samples,
-    genes, etc.) and subsequent search for over-represented annotations.
-    Instead, just check whether the members of groups defined by the
-    annotations are more similar than two randomly picked objects.
+# Dichotomization is bad
+
+Grouping / discretization of continuous variables
+ 
+::: {.columns}
+
+::: {.column width="50%"}
+![](fig/Garten-der-Lueste-rechts-unten.png){width="100%"}
+:::
+
+::: {.column width="50%"}
+Dichotomizing continuous predictors in multiple regression: a bad idea<br>
+[Royston, Altman, Sauerbrei<br>
+Statistics in Medicine 2006](https://doi.org/10.1002/sim.2331)
+:::
+:::
+
 
 # Leaky pipelines and statistical sufficiency
 
@@ -837,10 +899,22 @@ Reproducible workflows
 Open science: make data and code available
 
 
-# Further Reading
+# Acknowledgments
 
-Book chapter
+::: {.columns}
 
-Lecture and chapter presented merely a pragmatic introduction to design, there are many book long treatments of the subject that offer detailed advice on setting up experiments: @wu2011experiments; @box1978statistics; @glass2007experimental
+::: {.column width="50%"}
+![Susan Holmes](fig/microstats_holmes.jpg)
+:::
+
+:::{.column width="50%"}
+![$\quad\quad\quad\quad\quad\quad\quad\quad$Julia Philipp](fig/EulsLXGS_400x400.jpg){width="65%"}
+:::
+
+:::
+
+Quarto sources for this talk:
+[https://github.com/wolfganghuber/Best-Analysis-Practices-Talk](https://github.com/wolfganghuber/Best-Analysis-Practices-Talk)
+
 
 ## References 
