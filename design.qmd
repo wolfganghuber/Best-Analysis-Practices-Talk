@@ -14,7 +14,6 @@ format:
 # auto-stretch is a huge source of grief for slide layout, see https://quarto.org/docs/presentations/revealjs/advanced.html --> stretch
   html:
     code-line-numbers: false
-server: shiny
 execute: 
   echo: false
   warning: true
@@ -229,6 +228,9 @@ One should always opt for an explanation in terms of the fewest possible causes,
 :::
 
 :::
+
+# Accuracy vs precision
+![](fig/accuracy-vs-bias.png)
 
 
 # A lack of units
