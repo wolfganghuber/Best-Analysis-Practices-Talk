@@ -828,6 +828,8 @@ A single cell expression data matrix (Hiiragi2013 package) data (only the first 
 
 ```{r}
 #| label: wide
+#| message: FALSE
+#| echo: !expr c(2:5)
 library("SummarizedExperiment")
 data("x", package = "Hiiragi2013")
 dfw = as.data.frame(exprs(x))
@@ -839,6 +841,7 @@ This is an example for a data table in *wide format*.
 
 ```{r}
 #| label: pivot_longer
+#| echo: !expr c(3)
 library("magrittr")
 dfw$probeid = rownames(dfw)
 dfl = pivot_longer(dfw, 
